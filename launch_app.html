@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulmoDoc Suite 2.0 — Web Launcher & Medical PG Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(255, 255, 255, 0.12);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --cyan: #00d4ff;
+      --cyan-glow: rgba(0, 212, 255, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --rose: #ef4444;
+      --purple: #a855f7;
+      --input-bg: rgba(15, 23, 42, 0.9);
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-main);
+      background: radial-gradient(circle at 10% 10%, #111a33 0%, var(--bg) 60%),
+                  radial-gradient(circle at 90% 90%, #0d1e2e 0%, var(--bg) 70%);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Animated background elements */
+    .ambient-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(120px);
+      opacity: 0.15;
+    }
+    .glow-1 { top: -200px; left: -200px; background: var(--cyan); }
+    .glow-2 { bottom: -200px; right: -200px; background: var(--purple); }
+
+    .wrapper {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .brand-icon-box {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+    }
+    .brand-icon-box svg { width: 30px; height: 30px; }
+    .brand-meta h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .brand-meta p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(17, 24, 39, 0.7);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      transition: all 0.3s;
+    }
+    .status-pill.online {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+      color: var(--emerald);
+    }
+    .status-pill.online .status-dot {
+      background: var(--emerald);
+      box-shadow: 0 0 12px var(--emerald);
+      animation: pulseGreen 2s infinite;
+    }
+    .status-pill.offline {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.08);
+      color: var(--amber);
+    }
+    .status-pill.offline .status-dot {
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+    }
+
+    @keyframes pulseGreen {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.4rem;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 2rem;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.25s;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(99, 102, 241, 0.15));
+      color: #fff;
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      font-weight: 600;
+    }
+
+    /* Content Panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Hero Launcher Card */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2.25rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--emerald));
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+    }
+
+    .hero-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+    }
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+
+    .launch-action-box {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .btn-launch-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, #00d4ff, #3b82f6);
+      color: #030712;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      text-decoration: none;
+      box-shadow: 0 10px 25px var(--cyan-glow);
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-launch-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(0, 212, 255, 0.45);
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      color: #000;
+    }
+    .btn-launch-primary:active { transform: translateY(0); }
+
+    .btn-launch-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-launch-secondary:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--card-hover);
+    }
+
+    .auto-redirect-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .auto-redirect-row input[type="checkbox"] {
+      accent-color: var(--cyan);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Offline Instruction Box */
+    .offline-notice {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+    }
+    .offline-notice-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--amber);
+      font-size: 0.92rem;
+      margin-bottom: 0.5rem;
+    }
+    .offline-notice p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .code-chip {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--cyan);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: inline-block;
+      margin: 0.2rem 0;
+    }
+    .copy-cmd-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+    .copy-cmd-btn:hover { color: #fff; border-color: var(--cyan); }
+
+    /* Right column: Network QR & Device Info */
+    .qr-card-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .qr-frame {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .qr-frame svg {
+      width: 140px;
+      height: 140px;
+      display: block;
+      color: #0b0f19;
+    }
+    .network-badge {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--cyan);
+      padding: 0.35rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 212, 255, 0.25);
+    }
+    .qr-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s;
+    }
+    .stat-card:hover {
+      border-color: var(--card-hover);
+      transform: translateY(-2px);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+    }
+    .stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .stat-meta {
+      font-size: 0.75rem;
+      color: var(--cyan);
+      margin-top: 0.25rem;
+    }
+
+    /* Modules Quick Launch Grid */
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-title svg { width: 20px; height: 20px; color: var(--cyan); }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .module-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.4rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .module-item:hover {
+      border-color: var(--cyan);
+      background: rgba(23, 37, 84, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    .module-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.8rem;
+    }
+    .module-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .icon-cyan { background: linear-gradient(135deg, #0284c7, #06b6d4); }
+    .icon-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+    .icon-emerald { background: linear-gradient(135deg, #059669, #10b981); }
+    .icon-amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    .icon-rose { background: linear-gradient(135deg, #e11d48, #f43f5e); }
+    .icon-indigo { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+
+    .module-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+    .module-item h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .module-item p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+    .module-arrow {
+      margin-top: 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Calculator Cards */
+    .calc-container {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .calc-container { grid-template-columns: 1fr; }
+    }
+    .calc-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.75rem;
+      backdrop-filter: blur(14px);
+    }
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.8rem;
+    }
+    .calc-header h3 { font-size: 1.15rem; font-weight: 700; }
+    .preset-btns {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover { background: rgba(0, 212, 255, 0.15); color: var(--cyan); }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .input-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .input-group input {
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .input-group input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px var(--cyan-glow);
+    }
+
+    .result-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .result-primary {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--cyan);
+      margin-bottom: 0.6rem;
+    }
+    .result-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--card-border);
+    }
+    .metric-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .metric-name { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; }
+    .metric-val { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 600; color: #fff; }
+
+    /* Orders Accordion */
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .order-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.4rem;
+      transition: all 0.25s;
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .order-title-box h4 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .order-title-box p { font-size: 0.8rem; color: var(--cyan); }
+    .btn-copy-order {
+      background: rgba(0, 212, 255, 0.12);
+      border: 1px solid rgba(0, 212, 255, 0.35);
+      color: var(--cyan);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-copy-order:hover {
+      background: var(--cyan);
+      color: #000;
+    }
+    .order-content-pre {
+      background: rgba(10, 15, 26, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--card-border);
+      padding: 1.75rem 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    /* Checklist */
+    .checklist-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+    }
+    .checklist-row input { accent-color: var(--cyan); width: 18px; height: 18px; cursor: pointer; }
+    .checklist-text { font-size: 0.85rem; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="wrapper">
+    <!-- Top Navigation Header -->
+    <header>
+      <div class="brand-group">
+        <div class="brand-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="brand-meta">
+          <h1>PulmoDoc Suite 2.0 <span class="brand-badge">CLINICIAN EDITION</span></h1>
+          <p>Medical PG Clinical Support, Textbooks & Emergency Station</p>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <div class="status-pill offline" id="serverStatusPill">
+          <div class="status-dot"></div>
+          <span id="serverStatusText">Detecting Server...</span>
+        </div>
+        <button class="btn-launch-secondary" onclick="checkServerHealth(true)">
+          🔄 Check Status
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('launcher')">🚀 Launcher & Status</button>
+      <button class="tab-btn" onclick="switchTab('abg')">🧮 Offline ABG & Calculators</button>
+      <button class="tab-btn" onclick="switchTab('orders')">📋 Emergency Order Bundles</button>
+      <button class="tab-btn" onclick="switchTab('mobile')">📱 Mobile & Android APK</button>
+      <button class="tab-btn" onclick="switchTab('help')">❓ Batch & Troubleshooting</button>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LAUNCHER & STATUS -->
+    <!-- ========================================== -->
+    <div class="tab-panel active" id="tab-launcher">
+      <!-- Main Hero Card -->
+      <div class="hero-card">
+        <div class="hero-inner">
+          <div class="hero-left">
+            <h2 class="hero-title">Launch PulmoDoc Clinical Application</h2>
+            <p class="hero-desc">
+              Instant access to all multi-textbook libraries (Harrison's 22e, Fishman's 2026, Crofton & Douglas, Murray & Nadel, Felson), 105+ Medical PG MCQs, 48 interactive CXR/CT cases, bedside exam guides, and RICU emergency protocols.
+            </p>
+
+            <div class="launch-action-box">
+              <a href="http://127.0.0.1:8000" id="primaryLaunchBtn" target="_blank" class="btn-launch-primary">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                <span>OPEN PULMODOC SUITE (PORT 8000)</span>
+              </a>
+
+              <div class="auto-redirect-row">
+                <input type="checkbox" id="autoRedirectCheck" checked>
+                <label for="autoRedirectCheck">Automatically launch when server is detected running</label>
+              </div>
+
+              <!-- Notice for when server is offline -->
+              <div class="offline-notice" id="offlineNoticeBox">
+                <div class="offline-notice-header">
+                  <span>⚠️ Local HTTP Server is currently offline</span>
+                </div>
+                <p>
+                  To start the backend server, double-click <strong>launch_app.bat</strong> in this folder:
+                  <br>
+                  <span class="code-chip">C:\Users\harshith k r\Desktop\textbooks\launch_app.bat</span>
+                  <br>
+                  Or run in terminal: <span class="code-chip">python pulmo_server.py</span>
+                  <button class="copy-cmd-btn" onclick="copyText('python pulmo_server.py')">Copy Command</button>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column: Mobile Access & QR -->
+          <div class="hero-right">
+            <div class="qr-card-box">
+              <div class="network-badge" id="networkUrlLabel">http://172.28.100.184:8000</div>
+              <div class="qr-frame">
+                <!-- Inline SVG QR Code for http://172.28.100.184:8000 -->
+                <svg viewBox="0 0 29 29" class="qr-svg" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2,2h1v1h-1zM3,2h1v1h-1zM4,2h1v1h-1zM5,2h1v1h-1zM6,2h1v1h-1zM7,2h1v1h-1zM8,2h1v1h-1zM11,2h1v1h-1zM15,2h1v1h-1zM20,2h1v1h-1zM21,2h1v1h-1zM22,2h1v1h-1zM23,2h1v1h-1zM24,2h1v1h-1zM25,2h1v1h-1zM26,2h1v1h-1zM2,3h1v1h-1zM8,3h1v1h-1zM10,3h1v1h-1zM11,3h1v1h-1zM13,3h1v1h-1zM14,3h1v1h-1zM15,3h1v1h-1zM16,3h1v1h-1zM17,3h1v1h-1zM20,3h1v1h-1zM26,3h1v1h-1zM2,4h1v1h-1zM4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM8,4h1v1h-1zM11,4h1v1h-1zM12,4h1v1h-1zM13,4h1v1h-1zM17,4h1v1h-1zM20,4h1v1h-1zM22,4h1v1h-1zM23,4h1v1h-1zM24,4h1v1h-1zM26,4h1v1h-1zM2,5h1v1h-1zM4,5h1v1h-1zM5,5h1v1h-1zM6,5h1v1h-1zM8,5h1v1h-1zM10,5h1v1h-1zM11,5h1v1h-1zM13,5h1v1h-1zM15,5h1v1h-1zM17,5h1v1h-1zM18,5h1v1h-1zM20,5h1v1h-1zM22,5h1v1h-1zM23,5h1v1h-1zM24,5h1v1h-1zM26,5h1v1h-1zM2,6h1v1h-1zM4,6h1v1h-1zM5,6h1v1h-1zM6,6h1v1h-1zM8,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM16,6h1v1h-1zM20,6h1v1h-1zM22,6h1v1h-1zM23,6h1v1h-1zM24,6h1v1h-1zM26,6h1v1h-1zM2,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM17,7h1v1h-1zM20,7h1v1h-1zM26,7h1v1h-1zM2,8h1v1h-1zM3,8h1v1h-1zM4,8h1v1h-1zM5,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM12,8h1v1h-1zM14,8h1v1h-1zM16,8h1v1h-1zM18,8h1v1h-1zM20,8h1v1h-1zM21,8h1v1h-1zM22,8h1v1h-1zM23,8h1v1h-1zM24,8h1v1h-1zM25,8h1v1h-1zM26,8h1v1h-1zM14,9h1v1h-1zM16,9h1v1h-1zM17,9h1v1h-1zM2,10h1v1h-1zM3,10h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM11,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM15,10h1v1h-1zM17,10h1v1h-1zM18,10h1v1h-1zM19,10h1v1h-1zM21,10h1v1h-1zM23,10h1v1h-1zM25,10h1v1h-1zM2,11h1v1h-1zM3,11h1v1h-1zM4,11h1v1h-1zM6,11h1v1h-1zM7,11h1v1h-1zM11,11h1v1h-1zM15,11h1v1h-1zM16,11h1v1h-1zM19,11h1v1h-1zM25,11h1v1h-1zM3,12h1v1h-1zM4,12h1v1h-1zM5,12h1v1h-1zM7,12h1v1h-1zM8,12h1v1h-1zM10,12h1v1h-1zM11,12h1v1h-1zM13,12h1v1h-1zM14,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM20,12h1v1h-1zM21,12h1v1h-1zM22,12h1v1h-1zM23,12h1v1h-1zM25,12h1v1h-1zM26,12h1v1h-1zM2,13h1v1h-1zM6,13h1v1h-1zM7,13h1v1h-1zM9,13h1v1h-1zM11,13h1v1h-1zM12,13h1v1h-1zM13,13h1v1h-1zM17,13h1v1h-1zM21,13h1v1h-1zM26,13h1v1h-1zM2,14h1v1h-1zM3,14h1v1h-1zM4,14h1v1h-1zM8,14h1v1h-1zM10,14h1v1h-1zM11,14h1v1h-1zM13,14h1v1h-1zM14,14h1v1h-1zM15,14h1v1h-1zM17,14h1v1h-1zM18,14h1v1h-1zM20,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM24,14h1v1h-1zM25,14h1v1h-1zM26,14h1v1h-1zM2,15h1v1h-1zM3,15h1v1h-1zM4,15h1v1h-1zM6,15h1v1h-1zM12,15h1v1h-1zM14,15h1v1h-1zM16,15h1v1h-1zM23,15h1v1h-1zM25,15h1v1h-1zM2,16h1v1h-1zM6,16h1v1h-1zM7,16h1v1h-1zM8,16h1v1h-1zM9,16h1v1h-1zM14,16h1v1h-1zM16,16h1v1h-1zM17,16h1v1h-1zM19,16h1v1h-1zM21,16h1v1h-1zM23,16h1v1h-1zM25,16h1v1h-1zM26,16h1v1h-1zM2,17h1v1h-1zM4,17h1v1h-1zM5,17h1v1h-1zM6,17h1v1h-1zM7,17h1v1h-1zM9,17h1v1h-1zM14,17h1v1h-1zM18,17h1v1h-1zM23,17h1v1h-1zM26,17h1v1h-1zM2,18h1v1h-1zM8,18h1v1h-1zM12,18h1v1h-1zM15,18h1v1h-1zM18,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM22,18h1v1h-1zM24,18h1v1h-1zM10,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM14,19h1v1h-1zM15,19h1v1h-1zM16,19h1v1h-1zM17,19h1v1h-1zM18,19h1v1h-1zM22,19h1v1h-1zM23,19h1v1h-1zM24,19h1v1h-1zM2,20h1v1h-1zM3,20h1v1h-1zM4,20h1v1h-1zM5,20h1v1h-1zM6,20h1v1h-1zM7,20h1v1h-1zM8,20h1v1h-1zM10,20h1v1h-1zM11,20h1v1h-1zM12,20h1v1h-1zM14,20h1v1h-1zM15,20h1v1h-1zM18,20h1v1h-1zM20,20h1v1h-1zM22,20h1v1h-1zM23,20h1v1h-1zM24,20h1v1h-1zM25,20h1v1h-1zM26,20h1v1h-1zM2,21h1v1h-1zM8,21h1v1h-1zM12,21h1v1h-1zM14,21h1v1h-1zM17,21h1v1h-1zM18,21h1v1h-1zM22,21h1v1h-1zM23,21h1v1h-1zM2,22h1v1h-1zM4,22h1v1h-1zM5,22h1v1h-1zM6,22h1v1h-1zM8,22h1v1h-1zM10,22h1v1h-1zM12,22h1v1h-1zM15,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM19,22h1v1h-1zM20,22h1v1h-1zM21,22h1v1h-1zM22,22h1v1h-1zM23,22h1v1h-1zM24,22h1v1h-1zM2,23h1v1h-1zM4,23h1v1h-1zM5,23h1v1h-1zM6,23h1v1h-1zM8,23h1v1h-1zM10,23h1v1h-1zM11,23h1v1h-1zM12,23h1v1h-1zM13,23h1v1h-1zM14,23h1v1h-1zM15,23h1v1h-1zM16,23h1v1h-1zM17,23h1v1h-1zM20,23h1v1h-1zM21,23h1v1h-1zM22,23h1v1h-1zM24,23h1v1h-1zM25,23h1v1h-1zM26,23h1v1h-1zM2,24h1v1h-1zM4,24h1v1h-1zM5,24h1v1h-1zM6,24h1v1h-1zM8,24h1v1h-1zM10,24h1v1h-1zM11,24h1v1h-1zM14,24h1v1h-1zM17,24h1v1h-1zM18,24h1v1h-1zM19,24h1v1h-1zM24,24h1v1h-1zM26,24h1v1h-1zM2,25h1v1h-1zM8,25h1v1h-1zM10,25h1v1h-1zM14,25h1v1h-1zM18,25h1v1h-1zM20,25h1v1h-1zM21,25h1v1h-1zM22,25h1v1h-1zM23,25h1v1h-1zM26,25h1v1h-1zM2,26h1v1h-1zM3,26h1v1h-1zM4,26h1v1h-1zM5,26h1v1h-1zM6,26h1v1h-1zM7,26h1v1h-1zM8,26h1v1h-1zM10,26h1v1h-1zM11,26h1v1h-1zM15,26h1v1h-1zM17,26h1v1h-1zM21,26h1v1h-1zM22,26h1v1h-1zM23,26h1v1h-1zM24,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1z" fill="currentColor"/>
+                </svg>
+              </div>
+              <p class="qr-desc">
+                Scan with phone camera on the same Wi-Fi network to use on Android or iPhone.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Clinical Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">MCQ & Spotter Engine</div>
+          <div class="stat-val" id="stat-mcqs">105+</div>
+          <div class="stat-meta">NEET-PG, INI-CET & USMLE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Thoracic Radiology</div>
+          <div class="stat-val" id="stat-rad">48</div>
+          <div class="stat-meta">Interactive CXR & CT signs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Specialty Textbooks</div>
+          <div class="stat-val">5 Books</div>
+          <div class="stat-meta">Harrison 22e, Fishman 2026, Crofton, Murray</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Emergency Protocols</div>
+          <div class="stat-val">10 Bundles</div>
+          <div class="stat-meta">RICU & Resuscitation Orders</div>
+        </div>
+      </div>
+
+      <!-- Module Quick Jumps -->
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Direct Application Jump Stations</span>
+      </div>
+
+      <div class="modules-grid">
+        <a href="http://127.0.0.1:8000#radiology" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-cyan">🖼️</div>
+            <span class="module-tag">48 Plates</span>
+          </div>
+          <h3>Thoracic Radiology Atlas</h3>
+          <p>Pan & zoom interactive viewing station, negative film inversion, CT lung windowing, and blind spotter examination mode.</p>
+          <div class="module-arrow">Open Radiology Viewer →</div>
+        </a>
+
+        <a href="http://127.0.0.1:8000#mcq" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-purple">📝</div>
+            <span class="module-tag">105+ MCQs</span>
+          </div>
+          <h3>PG Examination Engine</h3>
+          <p>Tutor Practice Mode with examiner traps & textbook pearls, plus 30-minute Timed Exam Mode with score calculation.</p>
+          <div class="module-arrow">Open Exam Engine →</div>
+        </a>
+
+        <a href="http://127.0.0.1:8000#chapters" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-emerald">📚</div>
+            <span class="module-tag">Multi-Textbook</span>
+          </div>
+          <h3>Clinical Textbook Library</h3>
+          <p>Harrison's 22e (808 sections), Fishman's 2026 (759 sections), Crofton & Douglas (61 chapters), Murray & Nadel, and Felson's Signs.</p>
+          <div class="module-arrow">Explore Textbooks →</div>
+        </a>
+
+        <a href="http://127.0.0.1:8000#clinical" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-rose">🩺</div>
+            <span class="module-tag">5 Long Cases</span>
+          </div>
+          <h3>Bedside Physical Examination</h3>
+          <p>Systematic I-P-P-A respiratory examination, physical sign correlation, and 5 structured MD long case presentations.</p>
+          <div class="module-arrow">View Clinical Signs →</div>
+        </a>
+
+        <a href="http://127.0.0.1:8000#orders" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-amber">📋</div>
+            <span class="module-tag">10 Bundles</span>
+          </div>
+          <h3>RICU Emergency Orders</h3>
+          <p>One-click clipboard copyable order sheets for Acute Severe Asthma, AECOPD NIV, Massive Hemoptysis, Sepsis, and ARDSNet.</p>
+          <div class="module-arrow">Access Order Sheets →</div>
+        </a>
+
+        <a href="http://127.0.0.1:8000#viva" target="_blank" class="module-item">
+          <div class="module-top">
+            <div class="module-icon icon-indigo">🎓</div>
+            <span class="module-tag">4 Stations</span>
+          </div>
+          <h3>MD/DNB Table Viva Stations</h3>
+          <p>Underwater seal ICD bottle physics, fiberoptic bronchoscopy anatomy & cleaning, Abrams biopsy needles, and spirometry loops.</p>
+          <div class="module-arrow">Practice Viva Stations →</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: OFFLINE ABG & PHYSIOLOGICAL CALCULATORS -->
+    <!-- ========================================== -->
+    <div class="tab-panel" id="tab-abg">
+      <div class="calc-container">
+        <!-- ABG Calculator -->
+        <div class="calc-card">
+          <div class="calc-header">
+            <h3>🫁 Comprehensive Arterial Blood Gas Analyzer</h3>
+            <div class="preset-btns">
+              <button class="preset-btn" onclick="applyPreset('dka')">DKA</button>
+              <button class="preset-btn" onclick="applyPreset('copd')">COPD Flare</button>
+              <button class="preset-btn" onclick="applyPreset('ards')">Severe ARDS</button>
+              <button class="preset-btn" onclick="applyPreset('normal')">Baseline</button>
+            </div>
+          </div>
+
+          <div class="input-grid">
+            <div class="input-group">
+              <label>pH</label>
+              <input type="number" id="abg_ph" step="0.01" value="7.32" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>PaCO2 (mmHg)</label>
+              <input type="number" id="abg_paco2" step="1" value="60" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>HCO3 (mEq/L)</label>
+              <input type="number" id="abg_hco3" step="0.5" value="31" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>PaO2 (mmHg)</label>
+              <input type="number" id="abg_pao2" step="1" value="62" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>FiO2 (%)</label>
+              <input type="number" id="abg_fio2" step="1" value="28" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>Na+ (mEq/L)</label>
+              <input type="number" id="abg_na" step="1" value="138" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>Cl- (mEq/L)</label>
+              <input type="number" id="abg_cl" step="1" value="96" oninput="calcABG()">
+            </div>
+            <div class="input-group">
+              <label>Albumin (g/dL)</label>
+              <input type="number" id="abg_alb" step="0.1" value="4.0" oninput="calcABG()">
+            </div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-primary" id="abg_primary_res">Analyzing ABG...</div>
+            <div style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.5;" id="abg_desc_res"></div>
+
+            <div class="result-metrics">
+              <div class="metric-row">
+                <span class="metric-name">Winter's / Expected PaCO2</span>
+                <span class="metric-val" id="res_expected_pco2">--</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">Anion Gap (Corrected)</span>
+                <span class="metric-val" id="res_anion_gap">--</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">Delta-Delta Ratio</span>
+                <span class="metric-val" id="res_delta_delta">--</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">PaO2 / FiO2 Ratio</span>
+                <span class="metric-val" id="res_pf_ratio">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: CURB-65 & Wells -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <!-- CURB-65 -->
+          <div class="calc-card">
+            <div class="calc-header">
+              <h3>🦠 CURB-65 Pneumonia Severity Score</h3>
+              <span class="brand-badge" id="curb_score_badge">Score: 0</span>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <label class="checklist-row">
+                <input type="checkbox" id="curb_c" onchange="calcCURB()">
+                <span class="checklist-text"><strong>C</strong> — Confusion (AMTS &le; 8 or disorientation)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="curb_u" onchange="calcCURB()">
+                <span class="checklist-text"><strong>U</strong> — Blood Urea &gt; 7 mmol/L (BUN &gt; 19 mg/dL)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="curb_r" onchange="calcCURB()">
+                <span class="checklist-text"><strong>R</strong> — Respiratory Rate &ge; 30 breaths/min</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="curb_b" onchange="calcCURB()">
+                <span class="checklist-text"><strong>B</strong> — SBP &lt; 90 mmHg OR DBP &le; 60 mmHg</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="curb_65" onchange="calcCURB()">
+                <span class="checklist-text"><strong>65</strong> — Age &ge; 65 years</span>
+              </label>
+            </div>
+            <div class="result-box" style="margin-top: 1rem;">
+              <div style="font-weight: 700; color: var(--cyan); font-size: 0.95rem;" id="curb_triage">Low Risk: Outpatient Management</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;" id="curb_mortality">30-day mortality risk: 0.6%</div>
+            </div>
+          </div>
+
+          <!-- Wells Score -->
+          <div class="calc-card">
+            <div class="calc-header">
+              <h3>🩸 Wells Score for Pulmonary Embolism</h3>
+              <span class="brand-badge" id="wells_score_badge">Score: 0.0</span>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_dvt" onchange="calcWells()">
+                <span class="checklist-text">Clinical signs / symptoms of DVT (+3.0)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_alt" onchange="calcWells()">
+                <span class="checklist-text">PE is #1 diagnosis or equally likely (+3.0)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_hr" onchange="calcWells()">
+                <span class="checklist-text">Heart Rate &gt; 100 beats/min (+1.5)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_surg" onchange="calcWells()">
+                <span class="checklist-text">Immobilization &ge; 3 days OR surgery in 4 wks (+1.5)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_prev" onchange="calcWells()">
+                <span class="checklist-text">Previous objective DVT or PE (+1.5)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_hemo" onchange="calcWells()">
+                <span class="checklist-text">Hemoptysis (+1.0)</span>
+              </label>
+              <label class="checklist-row">
+                <input type="checkbox" id="wells_ca" onchange="calcWells()">
+                <span class="checklist-text">Active Malignancy (+1.0)</span>
+              </label>
+            </div>
+            <div class="result-box" style="margin-top: 1rem;">
+              <div style="font-weight: 700; color: var(--cyan); font-size: 0.95rem;" id="wells_tier">PE Unlikely (Low Probability)</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;" id="wells_action">Perform High-Sensitivity D-dimer. If negative, safely rule out PE.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: EMERGENCY ORDER BUNDLES -->
+    <!-- ========================================== -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="orders-list">
+        <!-- Order 1: Near-Fatal Asthma -->
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-title-box">
+              <h4>🚨 Acute Severe / Near-Fatal Asthma RICU Resuscitation Bundle</h4>
+              <p>Immediate 0–60 Minute Multi-Modal Bronchodilator & Anti-Inflammatory Protocol</p>
+            </div>
+            <button class="btn-copy-order" onclick="copyOrder('order_asthma')">📋 Copy Complete Order</button>
+          </div>
+          <pre class="order-content-pre" id="order_asthma">EMERGENCY ADMISSION ORDER SHEET — ACUTE SEVERE / NEAR-FATAL ASTHMA
+DIAGNOSIS: Acute Severe Asthma (Silent chest / PEFR &lt; 33% / PaCO2 &ge; 42 mmHg)
+LOCATION: Respiratory Intensive Care Unit (RICU) / High Dependency Unit
+
+1. POSITIONING & MONITORING:
+   - Propped-up sitting position (45–90 degrees). Do not force patient supine.
+   - Continuous multi-parameter monitoring: SpO2, ECG lead II, NIBP every 15 min.
+   - Target SpO2: 93–95% (Avoid hyperoxia-induced V/Q mismatch).
+
+2. HIGH-FLOW CONTROLLED OXYGEN:
+   - Oxygen via Venturi mask or tight nasal prongs titrated to SpO2 93–95%.
+
+3. CONTINUOUS / STACKED INHALED BRONCHODILATION:
+   - Nebulized Salbutamol 5.0 mg + Ipratropium Bromide 0.5 mg in 3 mL NS.
+   - Repeat back-to-back every 20 minutes for first 3 doses (0, 20, 40 min).
+   - Driven by oxygen at 6–8 L/min (never air-driven in severe hypoxemia).
+
+4. SYSTEMIC CORTICOSTEROIDS (IMMEDIATE):
+   - Inj. Hydrocortisone 200 mg IV stat, then 100 mg IV Q6H
+     (OR Inj. Methylprednisolone 40–80 mg IV stat, then 40 mg IV Q12H).
+
+5. INTRAVENOUS MAGNESIUM SULFATE:
+   - Inj. Magnesium Sulfate (MgSO4) 2.0 g (50% solution, 4 mL) diluted in 100 mL 5% Dextrose
+     infused IV over 20 minutes with continuous cardiac monitoring.
+
+6. FLUIDS & ELECTROLYTES:
+   - IV Normal Saline (0.9% NaCl) at 75–100 mL/hr (Correct insensible dehydration from tachypnea).
+   - Monitor Serum Potassium (High-dose salbutamol drives K+ intracellularly; supplement if K &lt; 3.8).
+
+7. ICU / INTUBATION READINESS:
+   - PaCO2 &gt; 42 mmHg with worsening exhaustion or altered mental status is an absolute alert.
+   - Ketamine 1–2 mg/kg IV preferred for RSI (bronchodilating NMDA antagonist).
+   - Avoid paralytic-steroid prolonged myopathy.</pre>
+        </div>
+
+        <!-- Order 2: AECOPD NIV -->
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-title-box">
+              <h4>💨 AECOPD Acute Respiratory Acidosis & NIV (BiPAP) Protocol</h4>
+              <p>GOLD 2024–2026 Non-Invasive Positive Pressure Ventilation Bundle</p>
+            </div>
+            <button class="btn-copy-order" onclick="copyOrder('order_copd')">📋 Copy Complete Order</button>
+          </div>
+          <pre class="order-content-pre" id="order_copd">EMERGENCY ADMISSION ORDER SHEET — AECOPD WITH ACUTE RESPIRATORY ACIDOSIS
+DIAGNOSIS: Acute Exacerbation of COPD (GOLD Group E) with Type 2 Respiratory Failure (pH &lt; 7.35, PaCO2 &gt; 45 mmHg)
+LOCATION: RICU / Respiratory Stepdown
+
+1. CONTROLLED OXYGEN TARGET:
+   - Oxygen titrated strictly via 24%–28% Venturi mask to SpO2 88–92%.
+   - (AVOID excessive FiO2: Prevents Haldane effect and abolition of hypoxic vasoconstriction).
+
+2. NON-INVASIVE VENTILATION (NIV / BiPAP) PROTOCOL:
+   - Mode: Spontaneous/Timed (S/T) with well-fitted oronasal mask.
+   - Initial IPAP (Inspiratory Pressure): 10–12 cmH2O.
+   - Initial EPAP (Expiratory Pressure): 4–5 cmH2O (Counteracts intrinsic PEEP / auto-PEEP).
+   - Titration: Increase IPAP by 2 cmH2O every 15–30 min based on tidal volume (Target 6–8 mL/kg) and tolerability up to 16–20 cmH2O.
+   - Backup Rate: 12–14 breaths/min; Rise time: 0.1–0.2 sec.
+   - MANDATORY: Repeat ABG at 1 HOUR post-NIV initiation (Look for improvement in pH &gt; 7.35 and PaCO2 reduction).
+
+3. BRONCHODILATION:
+   - Nebulized Levosalbutamol 1.25 mg + Ipratropium Bromide 0.5 mg Q4H via NIV nebulizer T-piece.
+
+4. SYSTEMIC CORTICOSTEROIDS:
+   - Tab / Inj. Prednisolone 40 mg PO/IV once daily for 5 days strictly (REDUCE trial protocol).
+
+5. ANTIMICROBIAL THERAPY (Anthonisen Type 1 Criteria):
+   - Inj. Amoxicillin-Clavulanate 1.2 g IV Q8H (or Inj. Cefotaxime 1 g IV Q8H) for 5–7 days.
+   - Azithromycin 500 mg PO on Day 1, then 250 mg daily for 4 days if atypical coverage needed.</pre>
+        </div>
+
+        <!-- Order 3: Massive Hemoptysis -->
+        <div class="order-card">
+          <div class="order-header">
+            <div class="order-title-box">
+              <h4>🩸 Massive Hemoptysis Immediate Resuscitation SOP</h4>
+              <p>&gt;100 mL/hr or &gt;400 mL/24 hr Airway Protection & Bronchial Artery Embolization Bundle</p>
+            </div>
+            <button class="btn-copy-order" onclick="copyOrder('order_hemo')">📋 Copy Complete Order</button>
+          </div>
+          <pre class="order-content-pre" id="order_hemo">EMERGENCY RESUSCITATION ORDER SHEET — MASSIVE HEMOPTYSIS
+DIAGNOSIS: Massive Hemoptysis (&gt;200 mL acute or &gt;600 mL/24 hr)
+PRIORITY: AIRWAY PROTECTION (Death is from ASPHYXIATION, not hypovolemia)
+
+1. POSITIONING:
+   - Place patient in LATERAL DECUBITUS position with the BLEEDING LUNG DOWN.
+   - (Prevents blood from pooling into the contralateral healthy lung).
+
+2. RESUSCITATION & VASCULAR ACCESS:
+   - Secure TWO large-bore IV cannulae (16G or 14G).
+   - Draw blood immediately for: Blood Grouping & Crossmatch (4 units PRBCs), CBC, PT/INR, aPTT, Platelets, Renal Function.
+   - Normal Saline IV infusion to maintain MAP &ge; 65 mmHg.
+
+3. PHARMACOTHERAPY:
+   - Inj. Tranexamic Acid (TXA) 1.0 g IV slow infusion over 10 min stat, then 1.0 g IV Q8H
+     (Nebulized TXA: 500 mg in 5 mL NS via nebulizer can be co-administered for topical hemostasis).
+   - Inj. Terlipressin 1.0 mg IV stat (or Vasopressin 0.2 units/min) with cardiac caution.
+   - Cough suppression: Syrup Codeine Phosphate 10–15 mL PO Q6H (prevent violent paroxysms).
+
+4. DEFINITIVE RADIOLOGY & PULMONOLOGY ALERT:
+   - Urgent contrast-enhanced CT of Thorax with Angiography (CTPA + Bronchial Artery Angio protocol).
+   - Alert Interventional Radiology for emergency Bronchial Artery Embolization (BAE).
+   - Prepare Flexible Bronchoscope with cold saline lavage (4 deg C) and topical 1:20,000 adrenaline.</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: MOBILE ACCESS & ANDROID APK GUIDE -->
+    <!-- ========================================== -->
+    <div class="tab-panel" id="tab-mobile">
+      <div class="calc-card" style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">📱 Running PulmoDoc Suite on Android Devices</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+          You can run PulmoDoc Suite on your Android smartphone or tablet either instantly as an offline Progressive Web App (PWA) without compilation, or build a native offline Android Studio APK.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <!-- Method 1: PWA -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.4rem;">
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.6rem;">⚡ Method 1: Instant Wi-Fi PWA (No Compiling)</div>
+            <ol style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.8; padding-left: 1.25rem;">
+              <li>Ensure your Android phone and this laptop are on the <strong>same Wi-Fi</strong>.</li>
+              <li>Start <strong>launch_app.bat</strong> on your laptop.</li>
+              <li>Scan the QR code on the launcher tab or browse to:
+                <br><span class="code-chip">http://172.28.100.184:8000</span>
+              </li>
+              <li>In Chrome on phone, tap the <strong>three-dots menu (&vellip;)</strong> &rarr; <strong>"Install App"</strong> (or "Add to Home screen").</li>
+              <li>The <strong>PulmoDoc</strong> app icon appears on your phone screen and works 100% full-screen!</li>
+            </ol>
+          </div>
+
+          <!-- Method 2: Android Studio APK -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.4rem;">
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--purple); margin-bottom: 0.6rem;">📦 Method 2: Android Studio Native APK</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.8rem;">
+              The complete standalone Android Studio project with pre-packaged assets (all 61 Crofton chapters, 36 Murray chapters, 105 MCQs, and 48 radiology plates) is located at:
+            </p>
+            <span class="code-chip" style="font-size: 0.78rem;">C:\Users\harshith k r\Desktop\textbooks\pulmo_android</span>
+            <ol style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.8; padding-left: 1.25rem; margin-top: 0.8rem;">
+              <li>Open <strong>Android Studio</strong>.</li>
+              <li>Select <strong>File &rarr; Open</strong> and choose the <code style="color:var(--cyan)">pulmo_android</code> folder.</li>
+              <li>Wait for Gradle sync, then click <strong>Build &rarr; Build Bundle(s) / APK(s) &rarr; Build APK(s)</strong>.</li>
+              <li>Find your compiled APK in:
+                <br><span class="code-chip" style="font-size: 0.72rem;">app/build/outputs/apk/debug/app-debug.apk</span>
+              </li>
+              <li>Install on your phone via USB or WhatsApp!</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: BATCH LAUNCHER & TROUBLESHOOTING -->
+    <!-- ========================================== -->
+    <div class="tab-panel" id="tab-help">
+      <div class="calc-card">
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.6rem;">🛠️ Local Launcher Operations & Batch Diagnostics</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+          The backend runs on Python's built-in standard library with zero third-party pip dependencies.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem;">
+            <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.4rem;">1. How <code style="color:var(--cyan)">launch_app.bat</code> Works</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+              When you double-click <strong>launch_app.bat</strong>, it sets the directory to <code style="color:var(--cyan)">%~dp0</code> (this folder), checks for Python 3 in your PATH, and runs <code style="color:var(--cyan)">python pulmo_server.py</code>. The server binds to port 8000 (or finds the next open port if 8000 is occupied) and automatically opens your default web browser.
+            </p>
+          </div>
+
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem;">
+            <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.4rem;">2. Starting from PowerShell / Terminal</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.5rem;">
+              You can also start the server directly by running:
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="code-chip">cd "C:\Users\harshith k r\Desktop\textbooks"; python pulmo_server.py</span>
+              <button class="copy-cmd-btn" onclick="copyText('cd \"C:\\Users\\harshith k r\\Desktop\\textbooks\"; python pulmo_server.py')">Copy</button>
+            </div>
+          </div>
+
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem;">
+            <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.4rem;">3. Port Already in Use (Address already in use)</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+              <code style="color:var(--cyan)">pulmo_server.py</code> has an intelligent port finder that automatically probes ports 8000 through 8010. If another process has port 8000 occupied, it will smoothly start on 8001 without crashing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      PulmoDoc Suite 2.0 &bull; Built for MD / DNB Respiratory Medicine Candidates & Pulmonologists &bull; Standalone Offline Ready
+    </footer>
+  </div>
+
+  <!-- Interactive JavaScript Logic -->
+  <script>
+    // Server Health Check
+    let serverActive = false;
+    let autoRedirectScheduled = false;
+
+    async function checkServerHealth(manual = false) {
+      const pill = document.getElementById('serverStatusPill');
+      const text = document.getElementById('serverStatusText');
+      const notice = document.getElementById('offlineNoticeBox');
+      const btn = document.getElementById('primaryLaunchBtn');
+
+      if (manual) {
+        text.textContent = 'Pinging Server...';
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+        const res = await fetch('http://127.0.0.1:8000/api/stats', {
+          signal: controller.signal,
+          mode: 'cors'
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const stats = await res.json();
+          serverActive = true;
+          pill.className = 'status-pill online';
+          text.textContent = 'SERVER ACTIVE (PORT 8000)';
+          notice.style.display = 'none';
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+
+          if (stats.mcq_count) document.getElementById('stat-mcqs').textContent = stats.mcq_count + '+';
+          if (stats.radiology_cases) document.getElementById('stat-rad').textContent = stats.radiology_cases;
+
+          // Auto-redirect if requested
+          const autoCheck = document.getElementById('autoRedirectCheck');
+          if (autoCheck && autoCheck.checked && !autoRedirectScheduled) {
+            autoRedirectScheduled = true;
+            let count = 2;
+            const origText = btn.innerHTML;
+            btn.innerHTML = `<span>🚀 LAUNCHING IN ${count}s...</span>`;
+            const interval = setInterval(() => {
+              count--;
+              if (count <= 0) {
+                clearInterval(interval);
+                window.location.href = 'http://127.0.0.1:8000';
+              } else {
+                btn.innerHTML = `<span>🚀 LAUNCHING IN ${count}s...</span>`;
+              }
+            }, 1000);
+          }
+        } else {
+          markOffline();
+        }
+      } catch (err) {
+        markOffline();
+      }
+    }
+
+    function markOffline() {
+      serverActive = false;
+      const pill = document.getElementById('serverStatusPill');
+      const text = document.getElementById('serverStatusText');
+      const notice = document.getElementById('offlineNoticeBox');
+
+      pill.className = 'status-pill offline';
+      text.textContent = 'SERVER OFFLINE (PORT 8000)';
+      notice.style.display = 'block';
+    }
+
+    // Auto-poll server every 3 seconds
+    setInterval(() => {
+      if (!serverActive) {
+        checkServerHealth(false);
+      }
+    }, 3000);
+
+    // Initial check
+    window.addEventListener('DOMContentLoaded', () => {
+      checkServerHealth(false);
+      calcABG();
+      calcCURB();
+      calcWells();
+    });
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+    }
+
+    // Utility: Copy text
+    function copyText(str) {
+      navigator.clipboard.writeText(str).then(() => {
+        alert('Copied to clipboard: ' + str);
+      }).catch(() => {
+        prompt('Copy command:', str);
+      });
+    }
+
+    function copyOrder(elemId) {
+      const text = document.getElementById(elemId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Order sheet copied to clipboard! You can now paste it directly into hospital notes or WhatsApp.');
+      });
+    }
+
+    // ==========================================
+    // STANDALONE ABG ENGINE
+    // ==========================================
+    function applyPreset(name) {
+      if (name === 'dka') {
+        setABG(7.18, 22, 8, 95, 21, 134, 96, 4.0);
+      } else if (name === 'copd') {
+        setABG(7.32, 68, 34, 55, 24, 140, 98, 4.0);
+      } else if (name === 'ards') {
+        setABG(7.30, 50, 24, 62, 70, 138, 102, 3.2);
+      } else if (name === 'normal') {
+        setABG(7.40, 40, 24, 95, 21, 140, 102, 4.0);
+      }
+      calcABG();
+    }
+
+    function setABG(ph, pco2, hco3, po2, fio2, na, cl, alb) {
+      document.getElementById('abg_ph').value = ph;
+      document.getElementById('abg_paco2').value = pco2;
+      document.getElementById('abg_hco3').value = hco3;
+      document.getElementById('abg_pao2').value = po2;
+      document.getElementById('abg_fio2').value = fio2;
+      document.getElementById('abg_na').value = na;
+      document.getElementById('abg_cl').value = cl;
+      document.getElementById('abg_alb').value = alb;
+    }
+
+    function calcABG() {
+      const pH = parseFloat(document.getElementById('abg_ph').value) || 7.4;
+      const pco2 = parseFloat(document.getElementById('abg_paco2').value) || 40;
+      const hco3 = parseFloat(document.getElementById('abg_hco3').value) || 24;
+      const pao2 = parseFloat(document.getElementById('abg_pao2').value) || 90;
+      const fio2 = parseFloat(document.getElementById('abg_fio2').value) || 21;
+      const na = parseFloat(document.getElementById('abg_na').value) || 140;
+      const cl = parseFloat(document.getElementById('abg_cl').value) || 102;
+      const alb = parseFloat(document.getElementById('abg_alb').value) || 4.0;
+
+      // 1. Primary Disorder
+      let primary = '';
+      let desc = '';
+
+      if (pH < 7.35) {
+        if (pco2 > 45 && hco3 < 22) {
+          primary = 'Mixed Acidemia (Combined Respiratory & Metabolic Acidosis)';
+          desc = 'Both elevated PaCO2 and depleted HCO3 contributing to severe acidemia. Look for cardiac arrest, sepsis with hypoventilation, or severe sedative overdose.';
+        } else if (pco2 > 45) {
+          primary = 'Respiratory Acidosis';
+          const acuteExp = 24 + ((pco2 - 40) / 10) * 1.0;
+          const chronicExp = 24 + ((pco2 - 40) / 10) * 3.5;
+          desc = `Alveolar hypoventilation (COPD, neuromuscular weakness, CNS depression). Expected HCO3: Acute = ${acuteExp.toFixed(1)}, Chronic = ${chronicExp.toFixed(1)} mEq/L.`;
+        } else if (hco3 < 22) {
+          primary = 'Metabolic Acidosis';
+          const winExp = (1.5 * hco3 + 8).toFixed(1);
+          desc = `Bicarbonate loss or organic acid accumulation. Winter's formula expected PaCO2 = ${winExp} ± 2 mmHg.`;
+        } else {
+          primary = 'Uncompensated Acidemia';
+        }
+      } else if (pH > 7.45) {
+        if (pco2 < 35 && hco3 > 26) {
+          primary = 'Mixed Alkalemia (Combined Respiratory & Metabolic Alkalosis)';
+          desc = 'Both alveolar hyperventilation and elevated bicarbonate present.';
+        } else if (pco2 < 35) {
+          primary = 'Respiratory Alkalosis';
+          desc = 'Alveolar hyperventilation (Early asthma, PE, sepsis, anxiety, liver failure).';
+        } else if (hco3 > 26) {
+          primary = 'Metabolic Alkalosis';
+          desc = 'Volume depletion, vomiting, nasogastric suction, or diuretic therapy.';
+        }
+      } else {
+        if (pco2 > 45 && hco3 > 26) {
+          primary = 'Fully Compensated Respiratory Acidosis (or Mixed Disorder)';
+          desc = 'Normal pH with elevated PaCO2 and high HCO3. Classic baseline in chronic hypercapnic COPD.';
+        } else if (pco2 < 35 && hco3 < 22) {
+          primary = 'Fully Compensated Metabolic Acidosis / Respiratory Alkalosis';
+          desc = 'Normal pH with low PaCO2 and low HCO3.';
+        } else {
+          primary = 'Normal Baseline Acid-Base Balance';
+          desc = 'Values fall within standard physiological reference ranges.';
+        }
+      }
+
+      // 2. Metrics
+      // Winter's formula
+      let expectedPco2Str = '--';
+      if (hco3 < 24) {
+        const win = 1.5 * hco3 + 8;
+        expectedPco2Str = `${(win - 2).toFixed(0)}–${(win + 2).toFixed(0)} mmHg`;
+      } else if (pco2 > 40) {
+        expectedPco2Str = `Acute: ${(24 + (pco2 - 40)*0.1).toFixed(1)} | Chr: ${(24 + (pco2 - 40)*0.35).toFixed(1)}`;
+      }
+
+      // Anion Gap & Albumin Correction
+      const rawAG = na - (cl + hco3);
+      const corrAG = rawAG + 2.5 * (4.0 - alb);
+
+      // Delta-Delta
+      let deltaStr = '--';
+      if (corrAG > 12 && hco3 < 24) {
+        const deltaAG = corrAG - 12;
+        const deltaHCO3 = 24 - hco3;
+        const ratio = deltaHCO3 > 0 ? (deltaAG / deltaHCO3).toFixed(2) : '--';
+        deltaStr = `${ratio} ` + (ratio < 0.8 ? '(HAGMA + NAGMA)' : ratio > 2.0 ? '(HAGMA + Met Alk)' : '(Pure HAGMA)');
+      }
+
+      // P/F Ratio
+      const pf = (pao2 / (fio2 / 100)).toFixed(0);
+      let pfDesc = '';
+      if (pf < 100) pfDesc = `${pf} (Severe ARDS)`;
+      else if (pf <= 200) pfDesc = `${pf} (Moderate ARDS)`;
+      else if (pf <= 300) pfDesc = `${pf} (Mild ARDS)`;
+      else pfDesc = `${pf} (Normal)`;
+
+      // Update UI
+      document.getElementById('abg_primary_res').textContent = primary;
+      document.getElementById('abg_desc_res').textContent = desc;
+      document.getElementById('res_expected_pco2').textContent = expectedPco2Str;
+      document.getElementById('res_anion_gap').textContent = `${corrAG.toFixed(1)} mEq/L (Raw: ${rawAG.toFixed(1)})`;
+      document.getElementById('res_delta_delta').textContent = deltaStr;
+      document.getElementById('res_pf_ratio').textContent = pfDesc;
+    }
+
+    // ==========================================
+    // CURB-65 CALCULATOR
+    // ==========================================
+    function calcCURB() {
+      let score = 0;
+      if (document.getElementById('curb_c').checked) score++;
+      if (document.getElementById('curb_u').checked) score++;
+      if (document.getElementById('curb_r').checked) score++;
+      if (document.getElementById('curb_b').checked) score++;
+      if (document.getElementById('curb_65').checked) score++;
+
+      document.getElementById('curb_score_badge').textContent = 'Score: ' + score;
+
+      let triage = '';
+      let mort = '';
+      if (score === 0) {
+        triage = 'Low Risk: Outpatient Management (BTS & ATS/IDSA)';
+        mort = '30-day mortality risk: ~0.6%';
+      } else if (score === 1) {
+        triage = 'Low Risk: Outpatient Care / Home Treatment Suitable';
+        mort = '30-day mortality risk: ~2.7%';
+      } else if (score === 2) {
+        triage = 'Intermediate Risk: Short Inpatient Ward Stay or Monitored Outpatient';
+        mort = '30-day mortality risk: ~6.8%';
+      } else if (score === 3) {
+        triage = 'High Risk: Urgent Inpatient Admission (Consider ICU/RICU)';
+        mort = '30-day mortality risk: ~14.0%';
+      } else {
+        triage = 'Severe High Risk: Immediate Intensive Care Unit (ICU/RICU) Admission';
+        mort = '30-day mortality risk: 27.8%–31.2%';
+      }
+
+      document.getElementById('curb_triage').textContent = triage;
+      document.getElementById('curb_mortality').textContent = mort;
+    }
+
+    // ==========================================
+    // WELLS SCORE FOR PE
+    // ==========================================
+    function calcWells() {
+      let score = 0;
+      if (document.getElementById('wells_dvt').checked) score += 3.0;
+      if (document.getElementById('wells_alt').checked) score += 3.0;
+      if (document.getElementById('wells_hr').checked) score += 1.5;
+      if (document.getElementById('wells_surg').checked) score += 1.5;
+      if (document.getElementById('wells_prev').checked) score += 1.5;
+      if (document.getElementById('wells_hemo').checked) score += 1.0;
+      if (document.getElementById('wells_ca').checked) score += 1.0;
+
+      document.getElementById('wells_score_badge').textContent = 'Score: ' + score.toFixed(1);
+
+      let tier = '';
+      let action = '';
+      if (score <= 4.0) {
+        tier = 'PE Unlikely (Low-to-Intermediate Probability: Score &le; 4.0)';
+        action = 'Perform High-Sensitivity D-dimer. If negative, safely rule out PE without CTPA. If positive, proceed to CTPA.';
+      } else {
+        tier = 'PE Likely (High Clinical Probability: Score &gt; 4.0)';
+        action = 'Skip D-dimer! Proceed directly to Urgent CT Pulmonary Angiography (CTPA) and initiate therapeutic anticoagulation unless contraindicated.';
+      }
+
+      document.getElementById('wells_tier').innerHTML = tier;
+      document.getElementById('wells_action').textContent = action;
+    }
+  </script>
+</body>
+</html>
